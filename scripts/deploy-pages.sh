@@ -5,6 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 REPO=$(basename "$(git remote get-url origin)" .git)
 BASE_PATH="/$REPO/" npm run build
+git worktree prune
+git branch -D gh-pages >/dev/null 2>&1 || true
 TMP=$(mktemp -d)
 git worktree add -q --detach "$TMP"
 (
