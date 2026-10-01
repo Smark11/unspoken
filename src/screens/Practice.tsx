@@ -213,7 +213,7 @@ export function Practice({ words, mode, listId, onExit }: Props) {
       <div className="mic-area">
         <MicButton state={mic} level={level} success={mic === 'busy' && judgement?.verdict === 'got'} onPress={say} />
         <div className="mic-label">{mic === 'listening' ? 'Listening…' : mic === 'busy' ? (judgement?.verdict === 'got' ? 'Next word…' : 'Checking…') : judgement?.verdict === 'almost' ? 'Say it again' : 'Say it'}</div>
-        <div className="mic-hint" aria-live="polite">{hint}</div>
+        <div className="mic-hint" aria-live="polite">{hint || (mic === 'idle' && !judgement && attempts.current[current] === 0 && current === 0 && mode === 'practice' ? 'Listen first, then tap and say the word.' : '')}</div>
         <button type="button" className="skip" onClick={skip} disabled={mic !== 'idle'}><SkipIcon size={16} />Skip for now</button>
       </div>
     </div>

@@ -63,3 +63,15 @@ One column, max 480px, left-aligned on list screens; the practised word is centr
 - Tracked-out caps labels, middle-dot meta strings, arrows on buttons: none.
 - Serif display is a default tell, but here it is the point: a headword in a dictionary. Kept,
   justified, and it is the only place the serif appears.
+
+
+## Revision after five design passes (30 Sep 2026)
+
+The brief changed to "world class, something people would pay for", so the system moved from quiet to premium while keeping the headword as the one memorable thing.
+
+- **Ground:** fog `#F3F4F9` (light) / ink `#0B0D14` (dark) with two fixed radial glows, cobalt top-left and azure bottom-right. Surfaces are translucent glass with a hairline border and a soft shadow.
+- **Action colour:** a cobalt to azure gradient (`#4F5BFF` → `#3DA9FC`) on the primary button, hero card, and mic orb. Red while listening, green on Got it, amber on Almost. Nothing else is coloured.
+- **Type:** Fraunces for the practised word, screen titles, result rows and the hero headline. Manrope for the interface. The hero's second line is italic in the gradient; that is the one typographic flourish.
+- **Signature moments:** the mic orb grows with your voice level and sends out ripples while listening; a word that lands turns the word green, bursts a few dots, flips the orb to a green check, plays a two-note cue and buzzes the phone. The finish screen draws the score ring from zero and reveals rows in sequence.
+- **Chrome:** segmented progress strip, glass chips with a sound-bars animation while the word is being spoken, bottom-sheet settings with a segmented theme control and a voice picker.
+- **Review tool:** `preview.html` frames the app at iPhone proportions with simulated safe areas, used for every screenshot in the five passes. Chrome pauses CSS animations in background tabs, which the preview shortcuts for entrance animations only.

@@ -41,12 +41,18 @@ right base path for the repository name, and publishes to Pages. In the reposito
 - Both sit behind small interfaces in `src/speech/`, so a real pronunciation-assessment service can
   be swapped in later. `PLAN.md` describes that path; `DESIGN.md` records the visual decisions.
 
+## Design review
+
+`preview.html` (dev server only) shows the app inside a phone frame with simulated safe areas:
+open http://localhost:5173/preview.html. `DESIGN.md` records the visual system and the five design
+passes.
+
 ## Layout
 
 ```
-src/lib/        words (parsing), scoring (pass/retry + guidance), scheduler (spaced review), storage, router
+src/lib/        words (parsing), scoring (pass/retry + guidance), session, scheduler (spaced review), storage, prefs, sounds, time, router
 src/speech/     Speaker and Listener interfaces with browser implementations, live mic level
-src/screens/    Home, NewList, Practice (also the finish view), Review
-src/components/ Segments, MicButton, Feedback
+src/screens/    Home, NewList, Practice (also the finish view), Review, Settings
+src/components/ Segments, MicButton, Feedback, Burst, Sheet, InstallBanner, Icons
 poc/            the original single-file proof of concept
 ```
