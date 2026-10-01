@@ -36,6 +36,7 @@ export function createBrowserSpeaker(): Speaker {
 
   return {
     available: !!synth,
+    engine: 'device',
     speak(text: string, rate: Rate) {
       if (!synth) return
       synth.cancel()
@@ -72,5 +73,7 @@ export function createBrowserSpeaker(): Speaker {
       voiceSubs.add(cb)
       return () => { voiceSubs.delete(cb) }
     },
+    setPreset() { /* presets are resolved to device voices by the caller */ },
+    warm() { /* device voices need no warm-up */ },
   }
 }

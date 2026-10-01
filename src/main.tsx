@@ -7,6 +7,7 @@ import { applyTheme } from './lib/prefs'
 
 applyTheme()
 registerSW({ immediate: true })
+window.addEventListener('hashchange', () => window.scrollTo({ top: 0 }))
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

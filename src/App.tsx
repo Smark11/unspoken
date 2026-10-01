@@ -4,6 +4,7 @@ import { Home } from './screens/Home'
 import { NewList } from './screens/NewList'
 import { Practice } from './screens/Practice'
 import { Review } from './screens/Review'
+import { About } from './screens/About'
 
 export function App() {
   const route = useRoute()
@@ -12,6 +13,8 @@ export function App() {
       return <NewList />
     case 'review':
       return <Review />
+    case 'about':
+      return <About />
     case 'practice': {
       const list = load().lists.find((l) => l.id === route.listId)
       if (!list) {

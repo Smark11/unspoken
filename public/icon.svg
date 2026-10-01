@@ -4,15 +4,18 @@
       <stop offset="0" stop-color="#5B63FF"/>
       <stop offset="1" stop-color="#3DA9FC"/>
     </linearGradient>
-    <radialGradient id="h" cx="0.3" cy="0.2" r="0.8">
-      <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+    <radialGradient id="h" cx="0.25" cy="0.15" r="0.9">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.28"/>
       <stop offset="1" stop-color="#fff" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="116" fill="#0b0d14"/>
-  <circle cx="256" cy="256" r="150" fill="url(#g)"/>
-  <circle cx="256" cy="256" r="150" fill="url(#h)"/>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="4"/>
-  <rect x="226" y="166" width="60" height="110" rx="30" fill="#fff"/>
-  <path d="M186 256a70 70 0 0 0 140 0M256 326v30" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round"/>
+  <rect width="512" height="512" rx="116" fill="url(#g)"/>
+  <rect width="512" height="512" rx="116" fill="url(#h)"/>
+  <g fill="#fff">
+    <rect x="88" y="208" width="48" height="96" rx="24"/>
+    <rect x="168" y="152" width="48" height="208" rx="24"/>
+    <rect x="248" y="96" width="48" height="320" rx="24"/>
+    <rect x="328" y="152" width="48" height="208" rx="24"/>
+    <rect x="408" y="208" width="48" height="96" rx="24"/>
+  </g>
 </svg>

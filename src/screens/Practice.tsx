@@ -49,6 +49,8 @@ export function Practice({ words, mode, listId, onExit }: Props) {
 
   const word = words[current]
 
+  useEffect(() => { speaker.warm(words) }, [words])
+
   // Learn: say the word as soon as it appears.
   useEffect(() => {
     if (finished) return

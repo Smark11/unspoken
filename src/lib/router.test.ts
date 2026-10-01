@@ -10,6 +10,7 @@ describe('parseHash', () => {
   it('parses routes', () => {
     expect(parseHash('#/new')).toEqual({ name: 'new' })
     expect(parseHash('#/review')).toEqual({ name: 'review' })
+    expect(parseHash('#/about')).toEqual({ name: 'about' })
     expect(parseHash('#/practice/abc%20d')).toEqual({ name: 'practice', listId: 'abc d' })
   })
 })

@@ -5,6 +5,7 @@ export type Route =
   | { name: 'new' }
   | { name: 'practice'; listId: string }
   | { name: 'review' }
+  | { name: 'about' }
 
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#\/?/, '')
@@ -12,6 +13,7 @@ export function parseHash(hash: string): Route {
   if (head === 'new') return { name: 'new' }
   if (head === 'practice' && arg) return { name: 'practice', listId: decodeURIComponent(arg) }
   if (head === 'review') return { name: 'review' }
+  if (head === 'about') return { name: 'about' }
   return { name: 'home' }
 }
 
@@ -20,6 +22,7 @@ export function navigate(route: Route) {
     route.name === 'home' ? '#/'
     : route.name === 'new' ? '#/new'
     : route.name === 'review' ? '#/review'
+    : route.name === 'about' ? '#/about'
     : `#/practice/${encodeURIComponent(route.listId)}`
   if (location.hash === to) return
   location.hash = to

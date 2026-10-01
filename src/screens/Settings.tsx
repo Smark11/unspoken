@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Sheet } from '../components/Sheet'
+import { navigate } from '../lib/router'
 import { PlayIcon } from '../components/Icons'
-import { getStyle, getTheme, getVoice, setStylePref, setTheme, setVoicePref, type Theme } from '../lib/prefs'
+import { getStyle, getTheme, getTtsUrl, getVoice, setStylePref, setTheme, setTtsUrl, setVoicePref, type Theme } from '../lib/prefs'
+import { CLOUD_VOICES } from '../speech/cloudSpeaker'
 import { applyVoicePrefs, speaker } from '../speech'
-import { STYLES, availablePresets, type Style } from '../speech/voices'
+import { PRESETS, STYLES, availablePresets, type Style } from '../speech/voices'
 import { playGotIt, setSoundsOn, soundsOn } from '../lib/sounds'
 
 const THEMES: { id: Theme; label: string }[] = [
@@ -13,16 +15,32 @@ const THEMES: { id: Theme; label: string }[] = [
 ]
 
 export function Settings({ open, onClose }: { open: boolean; onClose(): void }) {
+  const SAMPLE = 'Words you know. Learn to say them.'
   const [theme, setThemeState] = useState<Theme>(getTheme)
   const [voice, setVoice] = useState<string | null>(getVoice)
   const [style, setStyle] = useState<string>(getStyle)
   const [tick, setTick] = useState(0)
   useEffect(() => speaker.onVoices(() => setTick((t) => t + 1)), [])
-  const presets = useMemo(() => availablePresets(speaker.voices()), [open, tick])
+  const [ttsUrl, setTtsUrlState] = useState<string>(() => getTtsUrl() ?? '')
+  const [ttsStatus, setTtsStatus] = useState<'idle' | 'testing' | 'ok' | 'bad'>('idle')
+  const cloud = speaker.engine === 'cloud'
+  const presets = useMemo(() => {
+    if (cloud) return PRESETS.filter((p) => CLOUD_VOICES[p.id]).map((preset) => ({ preset, note: CLOUD_VOICES[preset.id].note }))
+    return availablePresets(speaker.voices()).map(({ preset, voice }) => ({ preset, note: `${preset.note} · ${voice.name.replace(/^(Microsoft|Google) /, '').replace(/ \(.*\)$/, '')}` }))
+  }, [open, tick, cloud, ttsUrl])
+  const saveTtsUrl = (value: string) => { setTtsUrlState(value); setTtsUrl(value.trim() === '' ? '' : value); setTtsStatus('idle') }
+  const testTts = async () => {
+    setTtsStatus('testing')
+    try {
+      const r = await fetch(`${ttsUrl.trim().replace(/\/+$/, '')}/health`)
+      const j = (await r.json()) as { ok?: boolean }
+      setTtsStatus(j.ok ? 'ok' : 'bad')
+      if (j.ok) { applyVoicePrefs(); speaker.speak(SAMPLE, 'normal') }
+    } catch { setTtsStatus('bad') }
+  }
   const [sounds, setSounds] = useState<boolean>(soundsOn)
   const toggleSounds = () => { const on = !sounds; setSoundsOn(on); setSounds(on); if (on) playGotIt() }
   const chooseTheme = (t: Theme) => { setTheme(t); setThemeState(t) }
-  const SAMPLE = 'Words you know. Learn to say them.'
   const chooseVoice = (id: string | null) => {
     setVoicePref(id); applyVoicePrefs(); setVoice(id)
     speaker.speak(SAMPLE, 'normal')
@@ -44,20 +62,44 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
       </div>
 
       <div className="setting">
-        <div className="setting-label">Voice</div>
+        <div className="setting-label">Voice <span className={`engine${cloud ? ' cloud' : ''}`}>{cloud ? 'Studio voices' : 'Device voices'}</span></div>
         {presets.length === 0 ? (
           <div className="muted small">No English voices are available on this device yet. Try again in a moment.</div>
         ) : (
           <div className="voice-list">
             <button type="button" className={`voice${voice === null ? ' on' : ''}`} onClick={() => chooseVoice(null)}>
-              <span><b>Automatic</b><span className="small muted">The best voice this device has</span></span>
+              <span><b>Automatic</b><span className="small muted">{cloud ? CLOUD_VOICES.auto.note : 'The best voice this device has'}</span></span>
+              <PlayIcon size={16} />
             </button>
-            {presets.map(({ preset, voice: v }) => (
+            {presets.map(({ preset, note }) => (
               <button key={preset.id} type="button" className={`voice${voice === preset.id ? ' on' : ''}`} onClick={() => chooseVoice(preset.id)}>
-                <span><b>{preset.label}</b><span className="small muted">{preset.note} · {v.name.replace(/^(Microsoft|Google) /, '').replace(/ \(.*\)$/, '')}</span></span>
+                <span><b>{preset.label}</b><span className="small muted">{note}</span></span>
                 <PlayIcon size={16} />
               </button>
             ))}
+          </div>
+        )}
+      </div>
+
+      <div className="setting">
+        <div className="setting-label">Studio voices</div>
+        <p className="small muted" style={{ margin: '0 0 8px' }}>
+          {cloud
+            ? 'Connected. Every accent uses a neural voice from the voice server below.'
+            : 'Device voices vary a lot by phone. Connect a voice server for natural, consistent accents everywhere. Setup takes ten minutes; see the worker folder in the project.'}
+        </p>
+        <div className="url-row">
+          <input className="url-input" type="url" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false}
+            placeholder="https://unspoken-voice.you.workers.dev" value={ttsUrl} onChange={(e) => saveTtsUrl(e.target.value)} />
+          <button type="button" className="btn" style={{ minHeight: 44, padding: '0 14px' }} disabled={!ttsUrl.trim() || ttsStatus === 'testing'} onClick={testTts}>
+            {ttsStatus === 'testing' ? 'Testing…' : 'Test'}
+          </button>
+        </div>
+        {ttsStatus === 'ok' && <div className="small" style={{ color: 'var(--got)', marginTop: 6 }}>Connected. Studio voices are on.</div>}
+        {ttsStatus === 'bad' && <div className="small" style={{ color: 'var(--almost)', marginTop: 6 }}>Couldn’t reach that server. Check the address and that it has been deployed with a key.</div>}
+        {/iPhone|iPad|iPod/.test(navigator.userAgent) && !cloud && (
+          <div className="small muted" style={{ marginTop: 8 }}>
+            On iPhone, better built-in voices can be downloaded under Settings › Accessibility › Spoken Content › Voices › English. Look for ones marked Enhanced or Premium.
           </div>
         )}
       </div>
@@ -81,9 +123,10 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
 
       <div className="setting">
         <div className="setting-label">About</div>
-        <p className="small muted" style={{ margin: 0 }}>
-          Unspoken runs entirely on your phone. Your lists and progress never leave this device. Hearing and listening use the voice built into your browser.
+        <p className="small muted" style={{ margin: '0 0 10px' }}>
+          Unspoken runs entirely on your phone. Your lists and progress never leave this device.
         </p>
+        <button type="button" className="btn block" onClick={() => { onClose(); navigate({ name: 'about' }) }}>About Unspoken and the creator</button>
       </div>
     </Sheet>
   )

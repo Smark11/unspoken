@@ -3,6 +3,7 @@ export type Theme = 'system' | 'light' | 'dark'
 const THEME_KEY = 'unspoken.theme'
 const VOICE_KEY = 'unspoken.voicePreset'
 const STYLE_KEY = 'unspoken.voiceStyle'
+const TTS_KEY = 'unspoken.ttsUrl'
 
 export function getTheme(): Theme {
   try {
@@ -45,3 +46,21 @@ export const SAMPLE_WORDS = [
   'colonel', 'quinoa', 'Worcestershire', 'anemone', 'rural',
   'gnocchi', 'pleocytosis', 'Siobhan', 'açaí', 'phenomenon',
 ]
+
+/** Voice server URL: set in Settings, or baked in at build time with VITE_TTS_URL. */
+export function getTtsUrl(): string | null {
+  try {
+    const saved = localStorage.getItem(TTS_KEY)
+    if (saved === '') return null                // explicitly turned off
+    if (saved) return saved
+  } catch { /* ignore */ }
+  const built = (import.meta.env.VITE_TTS_URL as string | undefined)?.trim()
+  return built || null
+}
+
+export function setTtsUrl(url: string | null) {
+  try {
+    if (url === null) localStorage.removeItem(TTS_KEY)
+    else localStorage.setItem(TTS_KEY, url.trim())
+  } catch { /* ignore */ }
+}

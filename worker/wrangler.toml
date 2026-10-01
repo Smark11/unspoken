@@ -1,0 +1,9 @@
+name = "unspoken-voice"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+AZURE_REGION = "eastus"
+# ALLOWED_ORIGIN = "https://smark11.github.io"
+
+# Secrets (never in this file):  wrangler secret put AZURE_SPEECH_KEY

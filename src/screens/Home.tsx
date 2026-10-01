@@ -7,7 +7,8 @@ import { InstallBanner } from '../components/InstallBanner'
 import { isRetired, pickReview } from '../lib/scheduler'
 import { navigate } from '../lib/router'
 import { listener, speaker } from '../speech'
-import { ChevronIcon, GearIcon, MicIcon, PlusIcon, Ring, SparkIcon } from '../components/Icons'
+import { ChevronIcon, GearIcon, PlusIcon, Ring, SparkIcon } from '../components/Icons'
+import { Logo } from '../components/Logo'
 
 function startSample() {
   const id = newId()
@@ -35,7 +36,7 @@ export function Home() {
   return (
     <div className="screen">
       <div className="topbar">
-        <div className="brand grow"><span className="brand-mark"><MicIcon size={16} /></span>Unspoken</div>
+        <div className="grow"><Logo size={30} /></div>
         <button type="button" className="icon-btn" aria-label="Settings" onClick={() => setSettingsOpen(true)}><GearIcon /></button>
       </div>
       <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
@@ -90,6 +91,9 @@ export function Home() {
           {lists.map((l) => <ListCard key={l.id} list={l} />)}
         </>
       )}
+      <div className="home-foot">
+        <button type="button" className="btn quiet" onClick={() => navigate({ name: 'about' })}>About Unspoken</button>
+      </div>
     </div>
   )
 }

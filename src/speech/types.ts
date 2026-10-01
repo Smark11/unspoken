@@ -5,6 +5,8 @@ export type Rate = 'normal' | 'slow'
 
 export interface Speaker {
   readonly available: boolean
+  /** 'cloud' when a voice server is configured, else the device's own voices. */
+  readonly engine: 'device' | 'cloud'
   speak(text: string, rate: Rate): void
   stop(): void
   /** Subscribe to speaking on/off; returns an unsubscribe function. */
@@ -17,6 +19,10 @@ export interface Speaker {
   setStyle(pitch: number, rate: number): void
   /** Called whenever the device's voice list changes (they load late on some browsers). */
   onVoices(cb: () => void): () => void
+  /** Accent preset id for engines that map presets themselves; null = automatic. */
+  setPreset(id: string | null): void
+  /** Fetch clips ahead of time so the first tap is instant. */
+  warm(texts: string[]): void
 }
 
 export type ListenError = 'unsupported' | 'not-allowed' | 'no-speech' | 'network' | 'other'
