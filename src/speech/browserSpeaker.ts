@@ -1,5 +1,4 @@
 import type { Rate, Speaker } from './types'
-import { getVoice } from '../lib/prefs'
 
 const PREFERRED = ['Samantha', 'Google US English', 'Microsoft Aria', 'Ava', 'Allison', 'Karen']
 // macOS ships joke voices that are useless for learning pronunciation.
@@ -11,7 +10,10 @@ export function createBrowserSpeaker(): Speaker {
   const subs = new Set<(speaking: boolean, rate: Rate | null) => void>()
   const emit = (speaking: boolean, rate: Rate | null) => subs.forEach((cb) => cb(speaking, rate))
 
-  let chosen: string | null = getVoice()
+  let chosen: string | null = null
+  let pitch = 1
+  let rateMul = 1
+  const voiceSubs = new Set<() => void>()
 
   const english = () => (synth ? synth.getVoices().filter((v) => /^en[-_]/i.test(v.lang) && !NOVELTY.test(v.name)) : [])
   const pick = () => {
@@ -29,7 +31,7 @@ export function createBrowserSpeaker(): Speaker {
   }
   if (synth) {
     pick()
-    synth.addEventListener?.('voiceschanged', pick)
+    synth.addEventListener?.('voiceschanged', () => { pick(); voiceSubs.forEach((cb) => cb()) })
   }
 
   return {
@@ -39,7 +41,8 @@ export function createBrowserSpeaker(): Speaker {
       synth.cancel()
       const u = new SpeechSynthesisUtterance(text)
       u.lang = 'en-US'
-      u.rate = rate === 'slow' ? 0.55 : 0.95
+      u.rate = (rate === 'slow' ? 0.55 : 0.95) * rateMul
+      u.pitch = pitch
       if (voice) u.voice = voice
       u.onstart = () => emit(true, rate)
       u.onend = () => emit(false, null)
@@ -55,14 +58,19 @@ export function createBrowserSpeaker(): Speaker {
       return () => { subs.delete(cb) }
     },
     voices() {
-      const all = english()
-      const score = (v: SpeechSynthesisVoice) =>
-        (PREFERRED.some((p) => v.name.includes(p)) ? 0 : 1) + (/^en[-_]US/i.test(v.lang) ? 0 : 2) + (v.localService ? 0 : 1)
-      return [...all].sort((a, b) => score(a) - score(b)).map((v) => ({ name: v.name, lang: v.lang }))
+      return english().map((v) => ({ name: v.name, lang: v.lang, local: v.localService }))
     },
     setVoice(name) {
       chosen = name
       pick()
+    },
+    setStyle(p, r) {
+      pitch = p
+      rateMul = r
+    },
+    onVoices(cb) {
+      voiceSubs.add(cb)
+      return () => { voiceSubs.delete(cb) }
     },
   }
 }

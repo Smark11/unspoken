@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Sheet } from '../components/Sheet'
 import { PlayIcon } from '../components/Icons'
-import { getTheme, getVoice, setTheme, setVoicePref, type Theme } from '../lib/prefs'
-import { speaker } from '../speech'
+import { getStyle, getTheme, getVoice, setStylePref, setTheme, setVoicePref, type Theme } from '../lib/prefs'
+import { applyVoicePrefs, speaker } from '../speech'
+import { STYLES, availablePresets, type Style } from '../speech/voices'
 import { playGotIt, setSoundsOn, soundsOn } from '../lib/sounds'
 
 const THEMES: { id: Theme; label: string }[] = [
@@ -14,14 +15,21 @@ const THEMES: { id: Theme; label: string }[] = [
 export function Settings({ open, onClose }: { open: boolean; onClose(): void }) {
   const [theme, setThemeState] = useState<Theme>(getTheme)
   const [voice, setVoice] = useState<string | null>(getVoice)
+  const [style, setStyle] = useState<string>(getStyle)
+  const [tick, setTick] = useState(0)
+  useEffect(() => speaker.onVoices(() => setTick((t) => t + 1)), [])
+  const presets = useMemo(() => availablePresets(speaker.voices()), [open, tick])
   const [sounds, setSounds] = useState<boolean>(soundsOn)
   const toggleSounds = () => { const on = !sounds; setSoundsOn(on); setSounds(on); if (on) playGotIt() }
-  const voices = useMemo(() => speaker.voices(), [open])
-
   const chooseTheme = (t: Theme) => { setTheme(t); setThemeState(t) }
-  const chooseVoice = (name: string | null) => {
-    setVoicePref(name); speaker.setVoice(name); setVoice(name)
-    speaker.speak('Worcestershire', 'normal')
+  const SAMPLE = 'Words you know. Learn to say them.'
+  const chooseVoice = (id: string | null) => {
+    setVoicePref(id); applyVoicePrefs(); setVoice(id)
+    speaker.speak(SAMPLE, 'normal')
+  }
+  const chooseStyle = (id: Style) => {
+    setStylePref(id); applyVoicePrefs(); setStyle(id)
+    speaker.speak(SAMPLE, 'normal')
   }
 
   return (
@@ -37,21 +45,31 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
 
       <div className="setting">
         <div className="setting-label">Voice</div>
-        {voices.length === 0 ? (
-          <div className="muted small">No English voices are available on this device.</div>
+        {presets.length === 0 ? (
+          <div className="muted small">No English voices are available on this device yet. Try again in a moment.</div>
         ) : (
           <div className="voice-list">
             <button type="button" className={`voice${voice === null ? ' on' : ''}`} onClick={() => chooseVoice(null)}>
-              <span><b>Automatic</b><span className="small muted">Best available voice</span></span>
+              <span><b>Automatic</b><span className="small muted">The best voice this device has</span></span>
             </button>
-            {voices.slice(0, 6).map((v) => (
-              <button key={v.name} type="button" className={`voice${voice === v.name ? ' on' : ''}`} onClick={() => chooseVoice(v.name)}>
-                <span><b>{v.name.replace(/^Microsoft |^Google /, '')}</b><span className="small muted">{v.lang.replace('_', '-')}</span></span>
+            {presets.map(({ preset, voice: v }) => (
+              <button key={preset.id} type="button" className={`voice${voice === preset.id ? ' on' : ''}`} onClick={() => chooseVoice(preset.id)}>
+                <span><b>{preset.label}</b><span className="small muted">{preset.note} · {v.name.replace(/^(Microsoft|Google) /, '').replace(/ \(.*\)$/, '')}</span></span>
                 <PlayIcon size={16} />
               </button>
             ))}
           </div>
         )}
+      </div>
+
+      <div className="setting">
+        <div className="setting-label">Character</div>
+        <div className="segmented" role="radiogroup" aria-label="Character">
+          {STYLES.map((st) => (
+            <button key={st.id} type="button" role="radio" aria-checked={style === st.id} className={style === st.id ? 'on' : ''} onClick={() => chooseStyle(st.id)}>{st.label}</button>
+          ))}
+        </div>
+        <div className="small muted" style={{ marginTop: 8 }}>Tap any voice to hear it. The slow button keeps whichever you choose.</div>
       </div>
 
       <div className="setting">

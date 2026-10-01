@@ -9,10 +9,14 @@ export interface Speaker {
   stop(): void
   /** Subscribe to speaking on/off; returns an unsubscribe function. */
   onSpeaking(cb: (speaking: boolean, rate: Rate | null) => void): () => void
-  /** English voices the device offers, best first. */
-  voices(): { name: string; lang: string }[]
+  /** English voices the device offers. */
+  voices(): { name: string; lang: string; local: boolean }[]
   /** Choose a voice by name; null returns to the automatic choice. */
   setVoice(name: string | null): void
+  /** Delivery style: pitch and a rate multiplier applied on top of normal/slow. */
+  setStyle(pitch: number, rate: number): void
+  /** Called whenever the device's voice list changes (they load late on some browsers). */
+  onVoices(cb: () => void): () => void
 }
 
 export type ListenError = 'unsupported' | 'not-allowed' | 'no-speech' | 'network' | 'other'
