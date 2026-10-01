@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { load, newId, titleFor, update, type WordList } from '../lib/storage'
 import { SAMPLE_WORDS } from '../lib/prefs'
 import { Settings } from './Settings'
+import { relative } from '../lib/time'
+import { InstallBanner } from '../components/InstallBanner'
 import { isRetired, pickReview } from '../lib/scheduler'
 import { navigate } from '../lib/router'
 import { listener, speaker } from '../speech'
@@ -61,6 +63,8 @@ export function Home() {
         </section>
       )}
 
+      <InstallBanner />
+
       <div className="stats">
         <div className="stat"><b>{mastered}</b><span>mastered</span></div>
         <div className="stat"><b>{retired}</b><span>locked in</span></div>
@@ -101,7 +105,7 @@ function ListCard({ list }: { list: WordList }) {
       </span>
       <span className="body">
         <span className="name">{list.title || titleFor(list.words)}</span>
-        <span className="sub">{list.words.length === 1 ? '1 word' : `${list.words.length} words`}{all ? ' · all mastered' : got ? ` · ${got} mastered` : ' · not started'}</span>
+        <span className="sub">{list.words.length === 1 ? '1 word' : `${list.words.length} words`}{all ? ' · all mastered' : got ? ` · ${got} mastered` : ''}{list.lastPracticedAt ? ` · ${relative(list.lastPracticedAt)}` : ' · not started'}</span>
       </span>
       <ChevronIcon className="chev" />
     </button>

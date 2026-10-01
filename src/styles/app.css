@@ -349,6 +349,17 @@ svg { display: block; }
 .result-row .mark.got { background: var(--got-soft); color: var(--got); }
 .result-row .mark.skipped { background: var(--almost-soft); color: var(--almost); }
 
+/* ---------- Install banner ---------- */
+.install { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 12px 12px 12px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--surface-border); box-shadow: var(--shadow-1); }
+.install-body { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.install-body b { font-weight: 700; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; padding: 12px 14px; border-radius: 14px; background: var(--pill); }
+.toggle-row > span:first-child { display: flex; flex-direction: column; }
+.toggle { position: relative; width: 48px; height: 29px; border-radius: 999px; background: var(--line); transition: background .2s; flex: none; }
+.toggle i { position: absolute; top: 3px; left: 3px; width: 23px; height: 23px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+.toggle.on { background: var(--got); }
+.toggle.on i { transform: translateX(19px); }
+
 /* ---------- Sheet & settings ---------- */
 .sheet-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(8, 10, 18, .55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s ease; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }

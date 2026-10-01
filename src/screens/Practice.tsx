@@ -11,6 +11,7 @@ import { listener, speaker, type ListenError } from '../speech'
 import { startMicLevel } from '../speech/micLevel'
 import { CheckIcon, CloseIcon, PlayIcon, Ring, SkipIcon, SlowIcon } from '../components/Icons'
 import { Burst } from '../components/Burst'
+import { playAlmost, playGotIt } from '../lib/sounds'
 import type { Rate } from '../speech'
 
 const buzz = (pattern: number | number[]) => { try { navigator.vibrate?.(pattern) } catch { /* unsupported */ } }
@@ -99,12 +100,14 @@ export function Practice({ words, mode, listId, onExit }: Props) {
     const key = wordKey(word)
     if (j.verdict === 'got') {
       buzz([30, 40, 30])
+      playGotIt()
       setBurst((b) => b + 1)
       persistResult(current, 'got')
       update((s) => { s.progress[key] = { ...onPass(s.progress[key], now), text: word } })
       advanceTimer.current = window.setTimeout(() => { setMic('idle'); moveOn('got') }, ADVANCE_MS)
     } else {
       buzz(60)
+      playAlmost()
       if (mode === 'review' && !missed.current.has(current)) {
         missed.current.add(current)
         update((s) => { s.progress[key] = { ...onMiss(s.progress[key], now), text: word } })

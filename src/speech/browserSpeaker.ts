@@ -2,6 +2,8 @@ import type { Rate, Speaker } from './types'
 import { getVoice } from '../lib/prefs'
 
 const PREFERRED = ['Samantha', 'Google US English', 'Microsoft Aria', 'Ava', 'Allison', 'Karen']
+// macOS ships joke voices that are useless for learning pronunciation.
+const NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Pipe Organ|Trinoids|Whisper|Wobble|Zarvox|Junior|Ralph|Kathy|Fred|Grandma|Grandpa|Rocko|Shelley|Eddy|Flo|Reed|Sandy|Superstar)\b/
 
 export function createBrowserSpeaker(): Speaker {
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
@@ -11,7 +13,7 @@ export function createBrowserSpeaker(): Speaker {
 
   let chosen: string | null = getVoice()
 
-  const english = () => (synth ? synth.getVoices().filter((v) => /^en[-_]/i.test(v.lang)) : [])
+  const english = () => (synth ? synth.getVoices().filter((v) => /^en[-_]/i.test(v.lang) && !NOVELTY.test(v.name)) : [])
   const pick = () => {
     if (!synth) return
     const all = english()
