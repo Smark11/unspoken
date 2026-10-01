@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unspoken</title>
+<style>
+  :root {
+    --bg: #f7f6f3; --card: #ffffff; --ink: #1c1b19; --muted: #6b6965;
+    --accent: #2f5fd1; --good: #1f8a4c; --good-bg: #e6f5ec; --warn: #b4540a; --warn-bg: #fdf0e4;
+    --line: #e4e1dc; --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; }
+  body { padding: calc(env(safe-area-inset-top, 0px) + 20px) 20px calc(env(safe-area-inset-bottom, 0px) + 20px); }
+  main { max-width: 520px; margin: 0 auto; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .tagline { color: var(--muted); margin: 0 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  textarea { width: 100%; min-height: 150px; font: inherit; padding: 12px; border: 1px solid var(--line);
+    border-radius: 12px; resize: vertical; background: #fff; color: var(--ink); }
+  .hint { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+  button { font: inherit; font-weight: 600; border: 0; border-radius: 12px; padding: 14px 18px; cursor: pointer;
+    background: #ebe9e4; color: var(--ink); min-height: 48px; }
+  button.primary { background: var(--accent); color: #fff; }
+  button.ghost { background: transparent; color: var(--muted); font-weight: 500; }
+  button:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .row > button { flex: 1 1 120px; }
+  .progress { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+  .dots { display: flex; gap: 5px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+  .dot.done { background: var(--good); } .dot.skip { background: #d9b26a; } .dot.now { background: var(--accent); }
+  .word { font-size: clamp(34px, 9vw, 52px); font-weight: 700; letter-spacing: -0.02em; text-align: center;
+    margin: 26px 0 22px; word-break: break-word; }
+  .mic { width: 100%; font-size: 19px; padding: 20px; background: var(--ink); color: #fff; }
+  .mic.listening { background: #c62828; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .75; } }
+  .feedback { margin-top: 16px; padding: 16px; border-radius: 12px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--good-bg); color: var(--good); }
+  .feedback.warn { background: var(--warn-bg); color: var(--warn); }
+  .feedback strong { font-size: 20px; display: block; margin-bottom: 4px; }
+  .feedback .tip { color: var(--ink); }
+  .heard { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .finish h2 { font-size: 40px; margin: 0; text-align: center; }
+  .finish p { text-align: center; color: var(--muted); }
+  ul.words { list-style: none; padding: 0; margin: 16px 0; }
+  ul.words li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .tag { font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .tag.m { background: var(--good-bg); color: var(--good); } .tag.s { background: #f6ecd6; color: #8a5f10; }
+  .library h3 { margin: 28px 0 8px; font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .lib-item { width: 100%; text-align: left; background: var(--card); border: 1px solid var(--line); margin-bottom: 8px;
+    display: flex; justify-content: space-between; font-weight: 500; }
+  .unsupported { background: var(--warn-bg); color: var(--warn); padding: 14px; border-radius: 12px; margin-bottom: 16px; display: none; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Unspoken</h1>
+  <p class="tagline">Words you know. Learn to say them.</p>
+
+  <div id="unsupported" class="unsupported"></div>
+
+  <!-- 1. Create a list -->
+  <section id="create" class="card">
+    <label for="words"><strong>Create a list</strong></label>
+    <p class="hint" style="margin:4px 0 10px">Type or paste up to 10 words. Any words.</p>
+    <textarea id="words" placeholder="pleocytosis&#10;Worcestershire&#10;quinoa&#10;rural&#10;anemone"></textarea>
+    <p class="hint" id="count">0 of 10</p>
+    <div class="row"><button class="primary" id="start">Start</button></div>
+    <div class="library" id="library"></div>
+  </section>
+
+  <!-- 2–5. Learn / Speak / Feedback / Advance -->
+  <section id="session" class="card hidden">
+    <div class="progress"><span id="progressText"></span><div class="dots" id="dots"></div></div>
+    <div class="word" id="word"></div>
+    <div class="row" style="margin-top:0">
+      <button id="hear">▶ Hear it</button>
+      <button id="slow">🐢 Slowly</button>
+    </div>
+    <div class="row"><button class="mic" id="mic">🎤 Say it</button></div>
+    <div class="feedback" id="feedback"><strong id="fbTitle"></strong><div class="tip" id="fbTip"></div><div class="heard" id="fbHeard"></div></div>
+    <div class="row"><button class="ghost" id="skip">Skip for now</button></div>
+  </section>
+
+  <!-- 6. Finish -->
+  <section id="finish" class="card finish hidden">
+    <h2 id="score"></h2>
+    <p id="scoreText"></p>
+    <ul class="words" id="summary"></ul>
+    <div class="row">
+      <button id="retrySkipped" class="primary">Practice skipped words</button>
+      <button id="newList">New list</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  // ---------- capability checks ----------
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const TTS = window.speechSynthesis;
+  const unsupported = document.getElementById('unsupported');
+  const problems = [];
+  if (!TTS) problems.push('This browser cannot speak words aloud.');
+  if (!SR) problems.push('This browser cannot listen to you. Use Chrome (desktop or Android) or Safari on iPhone.');
+  if (problems.length) { unsupported.textContent = problems.join(' '); unsupported.style.display = 'block'; }
+
+  // ---------- state ----------
+  const $ = id => document.getElementById(id);
+  let list = [];            // [{text, status:'new'|'mastered'|'skipped', attempts}]
+  let queue = [];           // indexes still to practise this session
+  let current = -1;
+  let listening = false;
+  let voice = null;
+
+  // ---------- library (localStorage) ----------
+  const LIB_KEY = 'unspoken.library';
+  const loadLib = () => { try { return JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch { return []; } };
+  const saveLib = lib => { try { localStorage.setItem(LIB_KEY, JSON.stringify(lib)); } catch {} };
+  function saveCurrentList() {
+    const lib = loadLib();
+    const key = list.map(w => w.text).join('|');
+    const existing = lib.find(l => l.key === key);
+    const entry = { key, words: list.map(w => ({ text: w.text, status: w.status })), updatedAt: Date.now() };
+    if (existing) Object.assign(existing, entry); else lib.unshift(entry);
+    saveLib(lib.slice(0, 20));
+  }
+  function renderLibrary() {
+    const lib = loadLib();
+    const el = $('library');
+    el.innerHTML = '';
+    if (!lib.length) return;
+    const h = document.createElement('h3'); h.textContent = 'Your library'; el.appendChild(h);
+    lib.forEach(entry => {
+      const b = document.createElement('button');
+      b.className = 'lib-item';
+      const mastered = entry.words.filter(w => w.status === 'mastered').length;
+      b.innerHTML = `<span>${entry.words.map(w => w.text).slice(0, 3).join(', ')}${entry.words.length > 3 ? '…' : ''}</span>
+                     <span class="tag ${mastered === entry.words.length ? 'm' : 's'}">${mastered}/${entry.words.length}</span>`;
+      b.onclick = () => startSession(entry.words.map(w => w.text));
+      el.appendChild(b);
+    });
+  }
+
+  // ---------- create ----------
+  const parseWords = text => [...new Set(text.split(/[\n,;]+|\s{2,}|\t/).map(s => s.trim()).filter(Boolean))];
+  $('words').addEventListener('input', () => {
+    const n = parseWords($('words').value).length;
+    $('count').textContent = `${n} of 10` + (n > 10 ? ' — only the first 10 will be used' : '');
+  });
+  $('start').onclick = () => {
+    const words = parseWords($('words').value).slice(0, 10);
+    if (!words.length) { $('words').focus(); return; }
+    startSession(words);
+  };
+
+  // ---------- session ----------
+  function startSession(words) {
+    list = words.map(text => ({ text, status: 'new', attempts: 0 }));
+    queue = list.map((_, i) => i);
+    show('session');
+    next();
+  }
+  function show(id) {
+    ['create', 'session', 'finish'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+    if (id === 'create') renderLibrary();
+  }
+  function next() {
+    hideFeedback();
+    if (!queue.length) return finish();
+    current = queue.shift();
+    const w = list[current];
+    $('word').textContent = w.text;
+    const done = list.filter(x => x.status === 'mastered').length;
+    $('progressText').textContent = `${done} of ${list.length} mastered`;
+    $('dots').innerHTML = list.map((x, i) =>
+      `<span class="dot ${i === current ? 'now' : x.status === 'mastered' ? 'done' : x.status === 'skipped' ? 'skip' : ''}"></span>`).join('');
+    setTimeout(() => speak(w.text, 1), 250);   // Learn: hear it as soon as it appears
+  }
+  $('skip').onclick = () => { list[current].status = 'skipped'; next(); };
+
+  // ---------- Learn: text to speech ----------
+  function pickVoice() {
+    if (!TTS) return;
+    const voices = TTS.getVoices();
+    const en = voices.filter(v => /^en[-_]US/i.test(v.lang));
+    const preferred = ['Samantha', 'Google US English', 'Microsoft Aria', 'Ava', 'Allison'];
+    voice = en.find(v => preferred.some(p => v.name.includes(p))) || en[0] || voices.find(v => /^en/i.test(v.lang)) || null;
+  }
+  if (TTS) { pickVoice(); TTS.onvoiceschanged = pickVoice; }
+  function speak(text, rate) {
+    if (!TTS) return;
+    TTS.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = rate; if (voice) u.voice = voice;
+    TTS.speak(u);
+  }
+  $('hear').onclick = () => speak(list[current].text, 1);
+  $('slow').onclick = () => speak(list[current].text, 0.55);
+
+  // ---------- Speak: speech recognition ----------
+  $('mic').onclick = () => { if (!listening) listen(); };
+  function listen() {
+    if (!SR) return;
+    TTS && TTS.cancel();
+    hideFeedback();
+    const rec = new SR();
+    rec.lang = 'en-US'; rec.interimResults = false; rec.maxAlternatives = 5; rec.continuous = false;
+    let gotResult = false;
+    const mic = $('mic');
+    const setListening = on => { listening = on; mic.classList.toggle('listening', on); mic.textContent = on ? '● Listening…' : '🎤 Say it'; };
+    setListening(true);
+    const safety = setTimeout(() => { try { rec.stop(); } catch {} }, 6000);
+    rec.onresult = e => {
+      gotResult = true;
+      const alts = [...e.results[0]].map(r => r.transcript);
+      judge(alts);
+    };
+    rec.onerror = e => {
+      gotResult = true;
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed')
+        feedback('warn', 'Microphone blocked', 'Allow microphone access for this page, then try again.');
+      else if (e.error === 'no-speech')
+        feedback('warn', 'We didn’t hear anything', 'Tap the mic, then say the word clearly.');
+      else if (e.error !== 'aborted')
+        feedback('warn', 'Couldn’t listen', `(${e.error}) Try again.`);
+    };
+    rec.onend = () => { clearTimeout(safety); setListening(false);
+      if (!gotResult) feedback('warn', 'We didn’t catch that', 'Try again, a little louder.'); };
+    try { rec.start(); } catch (err) { setListening(false); feedback('warn', 'Couldn’t start listening', String(err)); }
+  }
+
+  // ---------- Feedback ----------
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  function levenshtein(a, b) {
+    const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+    let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) {
+      const cur = [i];
+      for (let j = 1; j <= n; j++)
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+    return prev[n];
+  }
+  const similarity = (a, b) => 1 - levenshtein(a, b) / Math.max(a.length, b.length, 1);
+
+  function judge(alternatives) {
+    const w = list[current];
+    w.attempts++;
+    const target = norm(w.text);
+    let best = { alt: alternatives[0] || '', score: 0 };
+    for (const alt of alternatives) {
+      const s = similarity(target, norm(alt));
+      if (s > best.score) best = { alt, score: s };
+    }
+    const PASS = 0.8;
+    if (best.score >= PASS) {
+      w.status = 'mastered';
+      saveCurrentList();
+      feedback('good', '✓ Got it!', w.attempts > 1 ? 'That’s the one.' : 'First try.', best.alt);
+      setTimeout(next, 1300);                                   // Advance automatically
+    } else {
+      feedback('warn', 'Almost — try again', guidance(w.text, best.alt), best.alt);
+    }
+  }
+  function guidance(target, heard) {
+    const t = norm(target), h = norm(heard);
+    if (!h) return 'We didn’t catch a word. Tap the mic and say it clearly.';
+    if (h.length < t.length * 0.6) return 'Say the whole word — every syllable, even the quiet ones.';
+    if (t.slice(0, 2) !== h.slice(0, 2)) return `Focus on the beginning: it starts with “${target.slice(0, 2)}”. Tap 🐢 Slowly and copy the first sound.`;
+    if (t.slice(-3) !== h.slice(-3)) return `Watch the ending: it finishes with “${target.slice(-3)}”. Hold that last sound a beat longer.`;
+    return 'Close. Tap 🐢 Slowly, then say it one syllable at a time before speeding up.';
+  }
+  function feedback(kind, title, tip, heard) {
+    const el = $('feedback');
+    el.className = `feedback show ${kind}`;
+    $('fbTitle').textContent = title;
+    $('fbTip').textContent = tip;
+    $('fbHeard').textContent = heard ? `We heard: “${heard}”` : '';
+  }
+  function hideFeedback() { $('feedback').className = 'feedback'; }
+
+  // ---------- Finish ----------
+  function finish() {
+    saveCurrentList();
+    const mastered = list.filter(w => w.status === 'mastered');
+    const skipped = list.filter(w => w.status !== 'mastered');
+    $('score').textContent = `${mastered.length}/${list.length}`;
+    $('scoreText').textContent = mastered.length === list.length ? 'mastered. This list is saved in your library.'
+      : `mastered — ${skipped.length} skipped for now. This list is saved in your library.`;
+    $('summary').innerHTML = list.map(w =>
+      `<li><span>${w.text}</span><span class="tag ${w.status === 'mastered' ? 'm' : 's'}">${w.status === 'mastered' ? 'Mastered' : 'Skipped'}</span></li>`).join('');
+    $('retrySkipped').classList.toggle('hidden', !skipped.length);
+    show('finish');
+  }
+  $('retrySkipped').onclick = () => {
+    queue = list.map((w, i) => w.status !== 'mastered' ? i : -1).filter(i => i >= 0);
+    list.forEach(w => { if (w.status === 'skipped') w.status = 'new'; });
+    show('session'); next();
+  };
+  $('newList').onclick = () => { $('words').value = ''; $('count').textContent = '0 of 10'; show('create'); };
+
+  renderLibrary();
+})();
+</script>
+</body>
+</html>
