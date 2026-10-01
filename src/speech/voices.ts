@@ -1,7 +1,15 @@
 /** Accent presets. Each resolves to the best matching voice the device actually has, so the same
  *  choice works on an iPhone, an Android phone and a laptop even though their voice names differ. */
 
-export interface VoiceInfo { name: string; lang: string; local: boolean }
+export interface VoiceInfo { name: string; lang: string; local: boolean; uri?: string }
+
+/** 'Enhanced' or 'Premium' when the voice is a downloaded higher-quality version, else ''. */
+export function quality(v: VoiceInfo): string {
+  const id = `${v.name} ${v.uri ?? ''}`
+  if (/premium/i.test(id)) return 'Premium'
+  if (/enhanced/i.test(id)) return 'Enhanced'
+  return ''
+}
 
 export interface Preset {
   id: string
@@ -34,8 +42,8 @@ export const STYLES: { id: Style; label: string; pitch: number; rate: number }[]
   { id: 'bright', label: 'Bright', pitch: 1.3, rate: 1.04 },
 ]
 
-const quality = (v: VoiceInfo) =>
-  (/enhanced|premium|neural|natural/i.test(v.name) ? 0 : 1) + (v.local ? 0 : 1) + (/compact/i.test(v.name) ? 2 : 0)
+const rank = (v: VoiceInfo) =>
+  (quality(v) ? 0 : 1) + (/neural|natural/i.test(v.name) ? 0 : 1) + (v.local ? 0 : 1) + (/compact/i.test(`${v.name} ${v.uri ?? ''}`) ? 2 : 0)
 
 /** The device voice a preset maps to, or undefined when the device has nothing suitable. */
 export function resolvePreset(p: Preset, voices: VoiceInfo[]): VoiceInfo | undefined {
@@ -49,7 +57,7 @@ export function resolvePreset(p: Preset, voices: VoiceInfo[]): VoiceInfo | undef
   // otherwise a "deep" preset could quietly land on a woman's voice, or the reverse.
   if (!picks.length && !pool.some(known)) picks = pool
   if (!picks.length) return undefined
-  return [...picks].sort((a, b) => quality(a) - quality(b))[0]
+  return [...picks].sort((a, b) => rank(a) - rank(b))[0]
 }
 
 /** Presets the device can honour, deduplicated so two labels never point at one voice. */

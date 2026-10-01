@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { availablePresets, resolvePreset, PRESETS } from './voices'
+import { availablePresets, quality, resolvePreset, PRESETS } from './voices'
 
 const mac = [
   { name: 'Samantha', lang: 'en-US', local: true },
@@ -34,5 +34,20 @@ describe('voice presets', () => {
     const mixed = [{ name: 'Samantha', lang: 'en-US', local: true }, { name: 'Google US English', lang: 'en-US', local: false }]
     expect(resolvePreset(by('us-m'), mixed)).toBeUndefined()
     expect(availablePresets(mac).map((x) => x.preset.id)).not.toContain('za')
+  })
+})
+
+describe('quality', () => {
+  it('reads Enhanced and Premium from iOS voice ids', () => {
+    expect(quality({ name: 'Samantha', lang: 'en-US', local: true, uri: 'com.apple.voice.enhanced.en-US.Samantha' })).toBe('Enhanced')
+    expect(quality({ name: 'Ava', lang: 'en-US', local: true, uri: 'com.apple.voice.premium.en-US.Ava' })).toBe('Premium')
+    expect(quality({ name: 'Samantha', lang: 'en-US', local: true, uri: 'com.apple.ttsbundle.Samantha-compact' })).toBe('')
+  })
+  it('prefers the enhanced copy of a voice for a preset', () => {
+    const vs = [
+      { name: 'Samantha', lang: 'en-US', local: true, uri: 'com.apple.ttsbundle.Samantha-compact' },
+      { name: 'Samantha', lang: 'en-US', local: true, uri: 'com.apple.voice.enhanced.en-US.Samantha' },
+    ]
+    expect(resolvePreset(PRESETS.find((p) => p.id === 'us-f')!, vs)?.uri).toBe('com.apple.voice.enhanced.en-US.Samantha')
   })
 })

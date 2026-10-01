@@ -5,7 +5,7 @@ import { PlayIcon } from '../components/Icons'
 import { getStyle, getTheme, getTtsUrl, getVoice, setStylePref, setTheme, setTtsUrl, setVoicePref, type Theme } from '../lib/prefs'
 import { CLOUD_VOICES } from '../speech/cloudSpeaker'
 import { applyVoicePrefs, speaker } from '../speech'
-import { PRESETS, STYLES, availablePresets, type Style } from '../speech/voices'
+import { PRESETS, STYLES, availablePresets, quality, type Style } from '../speech/voices'
 import { playGotIt, setSoundsOn, soundsOn } from '../lib/sounds'
 
 const THEMES: { id: Theme; label: string }[] = [
@@ -35,6 +35,13 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
     if (cloud) return PRESETS.filter((p) => CLOUD_VOICES[p.id]).map((preset) => ({ preset, note: CLOUD_VOICES[preset.id].note }))
     return availablePresets(speaker.voices()).map(({ preset, voice }) => ({ preset, note: `${preset.note} · ${voice.name.replace(/^(Microsoft|Google) /, '').replace(/ \(.*\)$/, '')}` }))
   }, [open, tick, cloud, ttsUrl])
+  const [showAll, setShowAll] = useState(() => (getVoice() ?? '').startsWith('voice:'))
+  const deviceVoices = useMemo(() => {
+    const seen = new Set<string>()
+    return speaker.voices()
+      .filter((v) => { const k = v.uri || v.name; if (seen.has(k)) return false; seen.add(k); return true })
+      .sort((a, b) => (quality(b) ? 1 : 0) - (quality(a) ? 1 : 0) || a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name))
+  }, [open, tick])
   const saveTtsUrl = (value: string) => { setTtsUrlState(value); setTtsUrl(value.trim() === '' ? '' : value); setTtsStatus('idle') }
   const testTts = async () => {
     setTtsStatus('testing')
@@ -87,6 +94,29 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
           </div>
         )}
       </div>
+
+      {!cloud && deviceVoices.length > 0 && (
+        <div className="setting">
+          <button type="button" className="btn quiet" style={{ minHeight: 36, padding: 0 }} onClick={() => setShowAll((x) => !x)}>
+            {showAll ? 'Hide the full voice list' : `Choose a specific voice (${deviceVoices.length} on this device)`}
+          </button>
+          {showAll && (
+            <div className="voice-list" style={{ marginTop: 8 }}>
+              {deviceVoices.map((v) => {
+                const id = `voice:${v.uri || v.name}`
+                const q = quality(v)
+                return (
+                  <button key={id} type="button" className={`voice${voice === id ? ' on' : ''}`} onClick={() => chooseVoice(id)}>
+                    <span><b>{v.name.replace(/^(Microsoft|Google) /, '')}{q && <span className="engine cloud">{q}</span>}</b><span className="small muted">{v.lang.replace('_', '-')}{v.local ? '' : ' · online'}</span></span>
+                    <PlayIcon size={16} />
+                  </button>
+                )
+              })}
+              <div className="small muted">Downloaded a new voice and don’t see it? Close Safari fully and reopen Unspoken.</div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="setting">
         <div className="setting-label">Studio voices</div>

@@ -12,9 +12,9 @@ export interface Speaker {
   /** Subscribe to speaking on/off; returns an unsubscribe function. */
   onSpeaking(cb: (speaking: boolean, rate: Rate | null) => void): () => void
   /** English voices the device offers. */
-  voices(): { name: string; lang: string; local: boolean }[]
-  /** Choose a voice by name; null returns to the automatic choice. */
-  setVoice(name: string | null): void
+  voices(): { name: string; lang: string; local: boolean; uri: string }[]
+  /** Choose a device voice by its URI or name; null returns to the automatic choice. */
+  setVoice(idOrName: string | null): void
   /** Delivery style: pitch and a rate multiplier applied on top of normal/slow. */
   setStyle(pitch: number, rate: number): void
   /** Called whenever the device's voice list changes (they load late on some browsers). */

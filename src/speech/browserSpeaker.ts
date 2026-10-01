@@ -19,10 +19,14 @@ export function createBrowserSpeaker(): Speaker {
   const pick = () => {
     if (!synth) return
     const all = english()
-    const wanted = chosen ? all.find((v) => v.name === chosen) : undefined
+    const wanted = chosen ? all.find((v) => v.voiceURI === chosen) ?? all.find((v) => v.name === chosen) : undefined
     const us = all.filter((v) => /^en[-_]US/i.test(v.lang))
+    // Prefer a downloaded Enhanced/Premium voice, then the known good names, then anything local.
+    const better = (v: SpeechSynthesisVoice) => /enhanced|premium/i.test(`${v.name} ${v.voiceURI}`)
     voice =
       wanted ??
+      us.find((v) => better(v) && PREFERRED.some((p) => v.name.includes(p))) ??
+      us.find(better) ??
       us.find((v) => PREFERRED.some((p) => v.name.includes(p))) ??
       us.find((v) => v.localService) ??
       us[0] ??
@@ -59,7 +63,7 @@ export function createBrowserSpeaker(): Speaker {
       return () => { subs.delete(cb) }
     },
     voices() {
-      return english().map((v) => ({ name: v.name, lang: v.lang, local: v.localService }))
+      return english().map((v) => ({ name: v.name, lang: v.lang, local: v.localService, uri: v.voiceURI }))
     },
     setVoice(name) {
       chosen = name
