@@ -14,6 +14,12 @@ const THEMES: { id: Theme; label: string }[] = [
   { id: 'dark', label: 'Dark' },
 ]
 
+/** Major iOS version from the user agent, or 0 when not iOS. The settings path moved in iOS 26. */
+function iosMajor(): number {
+  const m = /OS (\d+)_/.exec(navigator.userAgent)
+  return m ? Number(m[1]) : 0
+}
+
 export function Settings({ open, onClose }: { open: boolean; onClose(): void }) {
   const SAMPLE = 'Words you know. Learn to say them.'
   const [theme, setThemeState] = useState<Theme>(getTheme)
@@ -99,8 +105,8 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
         {ttsStatus === 'ok' && <div className="small" style={{ color: 'var(--got)', marginTop: 6 }}>Connected. Studio voices are on.</div>}
         {ttsStatus === 'bad' && <div className="small" style={{ color: 'var(--almost)', marginTop: 6 }}>Couldn’t reach that server. Check the address and that it has been deployed with a key.</div>}
         {/iPhone|iPad|iPod/.test(navigator.userAgent) && !cloud && (
-          <div className="small muted" style={{ marginTop: 8 }}>
-            On iPhone, better built-in voices can be downloaded under Settings › Accessibility › Spoken Content › Voices › English. Look for ones marked Enhanced or Premium.
+          <div className="small muted ios-tip">
+            <b>Better built-in voices on iPhone.</b> Open the Settings app, then {iosMajor() >= 26 ? 'Accessibility › Read & Speak › Voices › English' : 'Accessibility › Spoken Content › Voices › English'}, and download a voice marked Enhanced or Premium (Samantha, Ava or Evan Enhanced are good). Close Safari fully and reopen Unspoken; the new voice then appears under Automatic. Safari doesn’t offer every downloaded voice to websites, so if nothing changes, Studio voices above are the dependable route.
           </div>
         )}
       </div>
