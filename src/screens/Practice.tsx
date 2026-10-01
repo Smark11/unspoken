@@ -10,6 +10,8 @@ import { wordKey } from '../lib/words'
 import { listener, speaker, type ListenError } from '../speech'
 import { startMicLevel } from '../speech/micLevel'
 import { CheckIcon, CloseIcon, PlayIcon, Ring, SkipIcon, SlowIcon } from '../components/Icons'
+import { Burst } from '../components/Burst'
+import type { Rate } from '../speech'
 
 const buzz = (pattern: number | number[]) => { try { navigator.vibrate?.(pattern) } catch { /* unsupported */ } }
 
@@ -38,6 +40,8 @@ export function Practice({ words, mode, listId, onExit }: Props) {
   const [level, setLevel] = useState<number | null>(null)
   const [judgement, setJudgement] = useState<Judgement | null>(null)
   const [hint, setHint] = useState<string>('')
+  const [speaking, setSpeaking] = useState<Rate | null>(null)
+  const [burst, setBurst] = useState(0)
   const attempts = useRef<number[]>(words.map(() => 0))
   const missed = useRef<Set<number>>(new Set())
   const advanceTimer = useRef<number | undefined>(undefined)
@@ -51,6 +55,7 @@ export function Practice({ words, mode, listId, onExit }: Props) {
     return () => window.clearTimeout(t)
   }, [word, finished])
 
+  useEffect(() => speaker.onSpeaking((on, rate) => setSpeaking(on ? rate : null)), [])
   useEffect(() => () => { speaker.stop(); listener.abort(); window.clearTimeout(advanceTimer.current) }, [])
 
   const persistResult = useCallback((index: number, r: WordResult) => {
@@ -94,6 +99,7 @@ export function Practice({ words, mode, listId, onExit }: Props) {
     const key = wordKey(word)
     if (j.verdict === 'got') {
       buzz([30, 40, 30])
+      setBurst((b) => b + 1)
       persistResult(current, 'got')
       update((s) => { s.progress[key] = { ...onPass(s.progress[key], now), text: word } })
       advanceTimer.current = window.setTimeout(() => { setMic('idle'); moveOn('got') }, ADVANCE_MS)
@@ -126,22 +132,30 @@ export function Practice({ words, mode, listId, onExit }: Props) {
     onExit()
   }
 
+  const [ringShown, setRingShown] = useState(false)
+  useEffect(() => {
+    if (!finished) { setRingShown(false); return }
+    const t = window.setTimeout(() => setRingShown(true), 60)
+    return () => window.clearTimeout(t)
+  }, [finished])
+
   if (finished) {
     const got = countGot(session)
     const skipped = words.length - got
     return (
       <div className="screen finish">
         <div className="score-wrap">
-          <Ring value={got / words.length} size={168} stroke={10} className="ringsvg" />
+          <Ring value={ringShown ? got / words.length : 0} size={168} stroke={10} className="ringsvg" />
           <div className="score">{got}<small>/{words.length}</small></div>
         </div>
         <p className="score-sub">
           {mode === 'review'
             ? got === words.length ? 'Still mastered. They’ll come back a little later each time.' : 'Kept. The others will come round again tomorrow.'
             : got === words.length ? 'All mastered. This list is in your library whenever you want it.'
-            : `Mastered, ${skipped} skipped for now. This list is in your library.`}
+            : got === 0 ? 'Nothing landed this time. Have another go whenever you like.'
+            : `${skipped === 1 ? 'One word is' : `${skipped} words are`} waiting for another go. The list is in your library.`}
         </p>
-        <div>
+        <div className="list">
           {words.map((w, i) => (
             <div key={w} className="result-row">
               <span className="w">{w}</span>
@@ -178,20 +192,31 @@ export function Practice({ words, mode, listId, onExit }: Props) {
 
       <div className="stage" data-state={state}>
         <div className="glow" />
-        <h2 key={current} className="word" lang="en">{word}</h2>
+        <div className="word-wrap">
+          <Burst seed={burst} />
+          <h2 key={current} className="word" lang="en">{word}</h2>
+        </div>
         <div className="listen-row">
-          <button type="button" className="chip" onClick={() => speaker.speak(word, 'normal')} disabled={mic === 'listening'}><PlayIcon />Hear it</button>
-          <button type="button" className="chip" onClick={() => speaker.speak(word, 'slow')} disabled={mic === 'listening'}><SlowIcon />Slow</button>
+          <button type="button" className={`chip${speaking === 'normal' ? ' speaking' : ''}`} onClick={() => speaker.speak(word, 'normal')} disabled={mic === 'listening'}>
+            {speaking === 'normal' ? <SoundBars /> : <PlayIcon />}Hear it
+          </button>
+          <button type="button" className={`chip${speaking === 'slow' ? ' speaking' : ''}`} onClick={() => speaker.speak(word, 'slow')} disabled={mic === 'listening'}>
+            {speaking === 'slow' ? <SoundBars /> : <SlowIcon />}Slow
+          </button>
         </div>
         <div className="feedback-slot">{judgement && <Feedback j={judgement} />}</div>
       </div>
 
       <div className="mic-area">
-        <MicButton state={mic} level={level} onPress={say} />
+        <MicButton state={mic} level={level} success={mic === 'busy' && judgement?.verdict === 'got'} onPress={say} />
         <div className="mic-label">{mic === 'listening' ? 'Listening…' : mic === 'busy' ? (judgement?.verdict === 'got' ? 'Next word…' : 'Checking…') : judgement?.verdict === 'almost' ? 'Say it again' : 'Say it'}</div>
         <div className="mic-hint" aria-live="polite">{hint}</div>
         <button type="button" className="skip" onClick={skip} disabled={mic !== 'idle'}><SkipIcon size={16} />Skip for now</button>
       </div>
     </div>
   )
+}
+
+function SoundBars() {
+  return <span className="soundbars" aria-hidden="true"><i /><i /><i /></span>
 }

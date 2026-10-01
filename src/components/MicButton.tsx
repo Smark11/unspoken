@@ -5,10 +5,11 @@ export type MicState = 'idle' | 'listening' | 'busy'
 interface Props {
   state: MicState
   level: number | null   // null = no live meter available, animate instead
+  success?: boolean      // busy because a word just landed
   onPress(): void
 }
 
-export function MicButton({ state, level, onPress }: Props) {
+export function MicButton({ state, level, success, onPress }: Props) {
   const listening = state === 'listening'
   const bars = [0.45, 0.8, 1, 0.8, 0.45]
   return (
@@ -16,7 +17,7 @@ export function MicButton({ state, level, onPress }: Props) {
       <span className="ripple" /><span className="ripple" /><span className="ripple" />
       <button
         type="button"
-        className={`orb ${state}${listening && level === null ? ' anim' : ''}`}
+        className={`orb ${state}${success ? ' success' : ''}${listening && level === null ? ' anim' : ''}`}
         style={{ ['--lvl' as string]: listening && level !== null ? level : 0 }}
         onClick={onPress}
         disabled={state === 'busy'}
@@ -28,6 +29,8 @@ export function MicButton({ state, level, onPress }: Props) {
               <i key={i} style={level === null ? undefined : { height: `${8 + Math.round(28 * w * Math.min(1, level * 1.6))}px` }} />
             ))}
           </span>
+        ) : success ? (
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" /></svg>
         ) : (
           <MicIcon size={38} />
         )}

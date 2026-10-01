@@ -7,6 +7,8 @@ export interface Speaker {
   readonly available: boolean
   speak(text: string, rate: Rate): void
   stop(): void
+  /** Subscribe to speaking on/off; returns an unsubscribe function. */
+  onSpeaking(cb: (speaking: boolean, rate: Rate | null) => void): () => void
 }
 
 export type ListenError = 'unsupported' | 'not-allowed' | 'no-speech' | 'network' | 'other'

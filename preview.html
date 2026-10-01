@@ -12,7 +12,7 @@
 </head>
 <body>
   <div class="phone"><iframe id="f" src="/" allow="microphone"></iframe><div class="notch"></div></div>
-  <script>document.getElementById('f').addEventListener('load', e => { const d = e.target.contentDocument; if (d) { d.documentElement.style.setProperty('--sat', '52px'); d.documentElement.style.setProperty('--sab', '24px'); const st = d.createElement('style'); st.textContent = '.word,.feedback{animation-duration:.01s!important}'; d.head.appendChild(st); } });
+  <script>document.getElementById('f').addEventListener('load', e => { const d = e.target.contentDocument; if (d) { d.documentElement.style.setProperty('--sat', '52px'); d.documentElement.style.setProperty('--sab', '24px'); const st = d.createElement('style'); st.textContent = '.word,.feedback,.result-row,.check path{animation-duration:.01s!important}'; d.head.appendChild(st); } });
 const q = new URLSearchParams(location.search); const h = q.get('hash'); if (h) document.getElementById('f').src = '/#/' + h;</script>
 </body>
 </html>

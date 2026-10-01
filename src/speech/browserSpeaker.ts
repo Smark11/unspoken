@@ -5,6 +5,8 @@ const PREFERRED = ['Samantha', 'Google US English', 'Microsoft Aria', 'Ava', 'Al
 export function createBrowserSpeaker(): Speaker {
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
   let voice: SpeechSynthesisVoice | null = null
+  const subs = new Set<(speaking: boolean, rate: Rate | null) => void>()
+  const emit = (speaking: boolean, rate: Rate | null) => subs.forEach((cb) => cb(speaking, rate))
 
   const pick = () => {
     if (!synth) return
@@ -31,10 +33,18 @@ export function createBrowserSpeaker(): Speaker {
       u.lang = 'en-US'
       u.rate = rate === 'slow' ? 0.55 : 0.95
       if (voice) u.voice = voice
+      u.onstart = () => emit(true, rate)
+      u.onend = () => emit(false, null)
+      u.onerror = () => emit(false, null)
       synth.speak(u)
     },
     stop() {
       synth?.cancel()
+      emit(false, null)
+    },
+    onSpeaking(cb) {
+      subs.add(cb)
+      return () => { subs.delete(cb) }
     },
   }
 }
