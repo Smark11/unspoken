@@ -65,6 +65,3 @@ export function setTtsUrl(url: string | null) {
   } catch { /* ignore */ }
 }
 
-const KOKORO_KEY = 'unspoken.kokoro'
-export const getKokoro = () => { try { return localStorage.getItem(KOKORO_KEY) === 'on' } catch { return false } }
-export const setKokoro = (on: boolean) => { try { localStorage.setItem(KOKORO_KEY, on ? 'on' : 'off') } catch { /* ignore */ } }

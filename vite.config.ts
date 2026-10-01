@@ -8,8 +8,6 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      // Kokoro loads on demand only when the toggle is on; keep it out of the precache.
-      workbox: { globIgnores: ['**/kokoro-*.js', '**/kokoro.worker-*.js', '**/transformers*.js', '**/*.wasm', '**/ort-*.js', '**/*.mjs'] },
       includeAssets: ['icon.svg', 'icon-512.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Unspoken',
@@ -27,7 +25,5 @@ export default defineConfig({
       },
     }),
   ],
-  optimizeDeps: { exclude: ['kokoro-js', '@huggingface/transformers'] },
-  build: { chunkSizeWarningLimit: 1500 },
   test: { environment: 'node', include: ['src/**/*.test.ts'] },
 })
