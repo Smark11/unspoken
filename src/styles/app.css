@@ -239,6 +239,28 @@ svg { display: block; }
   background: linear-gradient(to top, var(--ground) 72%, transparent);
 }
 
+/* ---------- Add word ---------- */
+.add-row { display: flex; gap: 8px; margin-top: 10px; }
+.add-input {
+  flex: 1; min-width: 0; font: inherit; font-size: 20px; font-family: var(--font-word);
+  font-variation-settings: 'opsz' 24, 'SOFT' 50; font-weight: 500; color: var(--ink);
+  padding: 12px 16px; border-radius: 16px; border: 1px solid var(--surface-border); background: var(--surface);
+  box-shadow: var(--shadow-1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.add-input::placeholder { font-family: var(--font-ui); font-size: 17px; font-weight: 500; color: var(--muted); }
+.add-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent), var(--shadow-1); }
+.add-btn { width: 54px; min-height: 54px; padding: 0; border-radius: 16px; flex: none; }
+.suggestions { list-style: none; margin: 8px 0 0; padding: 6px; border-radius: 18px; background: var(--surface-solid); border: 1px solid var(--surface-border); box-shadow: var(--shadow-1); animation: rise .2s ease; }
+.suggestions li button {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: left;
+  min-height: 46px; padding: 8px 12px; border-radius: 12px; font-family: var(--font-word);
+  font-variation-settings: 'opsz' 24, 'SOFT' 50; font-weight: 500; font-size: 19px; color: var(--ink);
+}
+.suggestions li button b { font-weight: 700; color: var(--accent); }
+.suggestions li button:active { background: var(--pill); }
+.suggestions li + li button { border-top: 1px solid var(--line); border-radius: 0 0 12px 12px; }
+.suggestions li button .small { font-family: var(--font-ui); }
+
 /* ---------- Practice ---------- */
 .practice { min-height: 100%; }
 .segments { display: flex; gap: 4px; flex: 1; }
