@@ -1,4 +1,5 @@
 import type { Rate, Speaker } from './types'
+import { getVoice } from '../lib/prefs'
 
 const PREFERRED = ['Samantha', 'Google US English', 'Microsoft Aria', 'Ava', 'Allison', 'Karen']
 
@@ -8,15 +9,20 @@ export function createBrowserSpeaker(): Speaker {
   const subs = new Set<(speaking: boolean, rate: Rate | null) => void>()
   const emit = (speaking: boolean, rate: Rate | null) => subs.forEach((cb) => cb(speaking, rate))
 
+  let chosen: string | null = getVoice()
+
+  const english = () => (synth ? synth.getVoices().filter((v) => /^en[-_]/i.test(v.lang)) : [])
   const pick = () => {
     if (!synth) return
-    const voices = synth.getVoices()
-    const us = voices.filter((v) => /^en[-_]US/i.test(v.lang))
+    const all = english()
+    const wanted = chosen ? all.find((v) => v.name === chosen) : undefined
+    const us = all.filter((v) => /^en[-_]US/i.test(v.lang))
     voice =
+      wanted ??
       us.find((v) => PREFERRED.some((p) => v.name.includes(p))) ??
       us.find((v) => v.localService) ??
       us[0] ??
-      voices.find((v) => /^en/i.test(v.lang)) ??
+      all[0] ??
       null
   }
   if (synth) {
@@ -45,6 +51,16 @@ export function createBrowserSpeaker(): Speaker {
     onSpeaking(cb) {
       subs.add(cb)
       return () => { subs.delete(cb) }
+    },
+    voices() {
+      const all = english()
+      const score = (v: SpeechSynthesisVoice) =>
+        (PREFERRED.some((p) => v.name.includes(p)) ? 0 : 1) + (/^en[-_]US/i.test(v.lang) ? 0 : 2) + (v.localService ? 0 : 1)
+      return [...all].sort((a, b) => score(a) - score(b)).map((v) => ({ name: v.name, lang: v.lang }))
+    },
+    setVoice(name) {
+      chosen = name
+      pick()
     },
   }
 }

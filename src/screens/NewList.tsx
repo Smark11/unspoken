@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { MAX_WORDS, parseWords } from '../lib/words'
 import { newId, titleFor, update } from '../lib/storage'
 import { navigate } from '../lib/router'
-import { BackIcon } from '../components/Icons'
+import { BackIcon, CloseIcon } from '../components/Icons'
 
 export function NewList() {
   const [text, setText] = useState('')
@@ -49,8 +49,13 @@ export function NewList() {
         {over && <span className="over">Only the first {MAX_WORDS} will be used</span>}
       </div>
       {words.length > 0 && (
-        <div className="preview" aria-hidden="true">
-          {words.map((w, i) => <span key={w} className={`tag${i >= MAX_WORDS ? ' extra' : ''}`}>{w}</span>)}
+        <div className="preview">
+          {words.map((w, i) => (
+            <button type="button" key={w} className={`tag${i >= MAX_WORDS ? ' extra' : ''}`} aria-label={`Remove ${w}`}
+              onClick={() => setText(words.filter((x) => x !== w).join('\n'))}>
+              {w}<CloseIcon size={14} />
+            </button>
+          ))}
         </div>
       )}
       <div className="sticky-bottom">

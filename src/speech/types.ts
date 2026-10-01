@@ -9,6 +9,10 @@ export interface Speaker {
   stop(): void
   /** Subscribe to speaking on/off; returns an unsubscribe function. */
   onSpeaking(cb: (speaking: boolean, rate: Rate | null) => void): () => void
+  /** English voices the device offers, best first. */
+  voices(): { name: string; lang: string }[]
+  /** Choose a voice by name; null returns to the automatic choice. */
+  setVoice(name: string | null): void
 }
 
 export type ListenError = 'unsupported' | 'not-allowed' | 'no-speech' | 'network' | 'other'

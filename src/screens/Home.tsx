@@ -1,10 +1,25 @@
-import { load, titleFor, type WordList } from '../lib/storage'
+import { useState } from 'react'
+import { load, newId, titleFor, update, type WordList } from '../lib/storage'
+import { SAMPLE_WORDS } from '../lib/prefs'
+import { Settings } from './Settings'
 import { isRetired, pickReview } from '../lib/scheduler'
 import { navigate } from '../lib/router'
 import { listener, speaker } from '../speech'
-import { ChevronIcon, MicIcon, PlusIcon, Ring } from '../components/Icons'
+import { ChevronIcon, GearIcon, MicIcon, PlusIcon, Ring, SparkIcon } from '../components/Icons'
+
+function startSample() {
+  const id = newId()
+  update((s) => {
+    s.lists.push({
+      id, title: 'Sample list', words: SAMPLE_WORDS, createdAt: Date.now(),
+      results: Object.fromEntries(SAMPLE_WORDS.map((w) => [w, 'new' as const])),
+    })
+  })
+  navigate({ name: 'practice', listId: id })
+}
 
 export function Home() {
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const store = load()
   const now = Date.now()
   const due = pickReview(store.progress, now)
@@ -17,7 +32,11 @@ export function Home() {
 
   return (
     <div className="screen">
-      <div className="brand"><span className="brand-mark"><MicIcon size={16} /></span>Unspoken</div>
+      <div className="topbar">
+        <div className="brand grow"><span className="brand-mark"><MicIcon size={16} /></span>Unspoken</div>
+        <button type="button" className="icon-btn" aria-label="Settings" onClick={() => setSettingsOpen(true)}><GearIcon /></button>
+      </div>
+      <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <h1 className="hero-title">Words you know.<br /><em>Learn to say them.</em></h1>
 
       {(!listener.available || !speaker.available) && (
@@ -50,9 +69,9 @@ export function Home() {
 
       {lists.length === 0 ? (
         <div className="empty">
-          <div className="small">Try something like</div>
-          <div className="ex">pleocytosis<br />Worcestershire<br />gnocchi</div>
+          <div className="ex">colonel<br />Worcestershire<br />gnocchi</div>
           <div className="small">Up to ten at a time. You’ll hear each one, say it, and move on when it lands.</div>
+          <button type="button" className="btn" style={{ marginTop: 18 }} onClick={startSample}><SparkIcon size={16} />Try a sample list</button>
         </div>
       ) : (
         <>
