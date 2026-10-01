@@ -29,9 +29,16 @@ npm run preview    # serve the built app
 
 ## Deploy to GitHub Pages
 
-Push to `main`. The workflow in `.github/workflows/deploy.yml` runs the tests, builds with the
-right base path for the repository name, and publishes to Pages. In the repository settings, set
-**Pages → Build and deployment → Source** to **GitHub Actions** once.
+Live at https://smark11.github.io/unspoken/
+
+Two ways to publish:
+
+- `npm run deploy` builds locally and pushes the result to the `gh-pages` branch, then asks GitHub
+  for a Pages build. This needs no Actions minutes. Pages must be set to deploy from the
+  `gh-pages` branch (Settings → Pages → Source → Deploy from a branch).
+- The workflow in `.github/workflows/deploy.yml` does the same on every push to `main` through
+  GitHub Actions, for when Actions is available on the account. Set Pages source to GitHub Actions
+  to use it.
 
 ## How speech works today
 
