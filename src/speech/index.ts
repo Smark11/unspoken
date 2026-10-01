@@ -1,11 +1,12 @@
 import { createBrowserListener } from './browserListener'
 import { createBrowserSpeaker } from './browserSpeaker'
 import { createCloudSpeaker } from './cloudSpeaker'
+import { createKokoroSpeaker } from './kokoroSpeaker'
 
 import { getStyle, getVoice } from '../lib/prefs'
 import { PRESETS, STYLES, resolvePreset } from './voices'
 
-export const speaker = createCloudSpeaker(createBrowserSpeaker())
+export const speaker = createKokoroSpeaker(createCloudSpeaker(createBrowserSpeaker()))
 export const listener = createBrowserListener()
 export * from './types'
 

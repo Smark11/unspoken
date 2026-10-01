@@ -40,6 +40,17 @@ Two ways to publish:
   GitHub Actions, for when Actions is available on the account. Set Pages source to GitHub Actions
   to use it.
 
+## Voices
+
+Three engines, chosen in Settings:
+
+- **Device voices** (default): whatever the phone's browser provides. Zero setup.
+- **Studio voices**: a Cloudflare Worker in `worker/` that proxies Kokoro (hosted on a Hugging Face
+  Space, DeepInfra, or Docker) or Azure neural voices. Instant, natural, needs a ten-minute setup.
+- **Kokoro on this device** (experimental): the open Kokoro-82M model running in the browser in a
+  Web Worker. Downloads about 90 MB once; each word takes a few seconds to synthesize, longer on
+  phones, so lists are prepared in the background.
+
 ## How speech works today
 
 - Hearing the word: the browser's built-in text-to-speech.

@@ -3,7 +3,19 @@ main = "src/index.js"
 compatibility_date = "2026-09-01"
 
 [vars]
+# Pick one provider. Leave TTS_PROVIDER unset to infer it from the secrets you add.
+# TTS_PROVIDER = "kokoro"
+
+# Kokoro (any OpenAI-compatible /v1/audio/speech host: Hugging Face Space, DeepInfra, Docker)
+# KOKORO_URL = "https://<you>-kokoro.hf.space"
+# KOKORO_MODEL = "kokoro"            # DeepInfra uses "hexgrad/Kokoro-82M"
+
+# Azure
 AZURE_REGION = "eastus"
+
+# Lock the server to the site once it works:
 # ALLOWED_ORIGIN = "https://smark11.github.io"
 
-# Secrets (never in this file):  wrangler secret put AZURE_SPEECH_KEY
+# Secrets (never in this file):
+#   wrangler secret put AZURE_SPEECH_KEY
+#   wrangler secret put KOKORO_KEY       # only if the Kokoro host requires one

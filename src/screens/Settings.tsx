@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Sheet } from '../components/Sheet'
 import { navigate } from '../lib/router'
 import { PlayIcon } from '../components/Icons'
-import { getStyle, getTheme, getTtsUrl, getVoice, setStylePref, setTheme, setTtsUrl, setVoicePref, type Theme } from '../lib/prefs'
+import { getKokoro, getStyle, getTheme, getTtsUrl, getVoice, setKokoro, setStylePref, setTheme, setTtsUrl, setVoicePref, type Theme } from '../lib/prefs'
 import { CLOUD_VOICES } from '../speech/cloudSpeaker'
+import { KOKORO_VOICES, kokoroStatus, loadKokoro, onKokoroStatus } from '../speech/kokoroSpeaker'
 import { applyVoicePrefs, speaker } from '../speech'
 import { PRESETS, STYLES, availablePresets, type Style } from '../speech/voices'
 import { playGotIt, setSoundsOn, soundsOn } from '../lib/sounds'
@@ -23,11 +24,21 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
   useEffect(() => speaker.onVoices(() => setTick((t) => t + 1)), [])
   const [ttsUrl, setTtsUrlState] = useState<string>(() => getTtsUrl() ?? '')
   const [ttsStatus, setTtsStatus] = useState<'idle' | 'testing' | 'ok' | 'bad'>('idle')
-  const cloud = speaker.engine === 'cloud'
+  const [kokoro, setKokoroState] = useState<boolean>(getKokoro)
+  const [kStatus, setKStatus] = useState(kokoroStatus)
+  useEffect(() => onKokoroStatus(setKStatus), [])
+  const engine = speaker.engine
+  const cloud = engine === 'cloud'
   const presets = useMemo(() => {
+    if (engine === 'kokoro') return PRESETS.filter((p) => KOKORO_VOICES[p.id]).map((preset) => ({ preset, note: KOKORO_VOICES[preset.id].note }))
     if (cloud) return PRESETS.filter((p) => CLOUD_VOICES[p.id]).map((preset) => ({ preset, note: CLOUD_VOICES[preset.id].note }))
     return availablePresets(speaker.voices()).map(({ preset, voice }) => ({ preset, note: `${preset.note} · ${voice.name.replace(/^(Microsoft|Google) /, '').replace(/ \(.*\)$/, '')}` }))
-  }, [open, tick, cloud, ttsUrl])
+  }, [open, tick, engine, cloud, ttsUrl, kokoro, kStatus.state])
+  const toggleKokoro = () => {
+    const on = !kokoro
+    setKokoro(on); setKokoroState(on)
+    if (on) loadKokoro().then(() => { applyVoicePrefs(); speaker.speak(SAMPLE, 'normal') }).catch(() => { /* status shows the error */ })
+  }
   const saveTtsUrl = (value: string) => { setTtsUrlState(value); setTtsUrl(value.trim() === '' ? '' : value); setTtsStatus('idle') }
   const testTts = async () => {
     setTtsStatus('testing')
@@ -62,13 +73,13 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
       </div>
 
       <div className="setting">
-        <div className="setting-label">Voice <span className={`engine${cloud ? ' cloud' : ''}`}>{cloud ? 'Studio voices' : 'Device voices'}</span></div>
+        <div className="setting-label">Voice <span className={`engine${engine !== 'device' ? ' cloud' : ''}`}>{engine === 'kokoro' ? 'Kokoro on this device' : cloud ? 'Studio voices' : 'Device voices'}</span></div>
         {presets.length === 0 ? (
           <div className="muted small">No English voices are available on this device yet. Try again in a moment.</div>
         ) : (
           <div className="voice-list">
             <button type="button" className={`voice${voice === null ? ' on' : ''}`} onClick={() => chooseVoice(null)}>
-              <span><b>Automatic</b><span className="small muted">{cloud ? CLOUD_VOICES.auto.note : 'The best voice this device has'}</span></span>
+              <span><b>Automatic</b><span className="small muted">{engine === 'kokoro' ? KOKORO_VOICES.auto.note : cloud ? CLOUD_VOICES.auto.note : 'The best voice this device has'}</span></span>
               <PlayIcon size={16} />
             </button>
             {presets.map(({ preset, note }) => (
@@ -77,6 +88,20 @@ export function Settings({ open, onClose }: { open: boolean; onClose(): void }) 
                 <PlayIcon size={16} />
               </button>
             ))}
+          </div>
+        )}
+      </div>
+
+      <div className="setting">
+        <div className="setting-label">Kokoro voices <span className="engine">Experimental</span></div>
+        <button type="button" className="toggle-row" role="switch" aria-checked={kokoro} onClick={toggleKokoro}>
+          <span><b>Natural voices on this device</b><span className="small muted">Kokoro, an open model. Downloads about 90 MB once, then works offline. Each word takes a few seconds to prepare, the first one longer; a list is prepared in the background as you start it.</span></span>
+          <span className={`toggle${kokoro ? ' on' : ''}`} aria-hidden="true"><i /></span>
+        </button>
+        {kokoro && kStatus.state !== 'off' && (
+          <div className="kokoro-status">
+            {kStatus.state === 'loading' && <div className="bar"><i style={{ width: `${Math.round(kStatus.progress * 100)}%` }} /></div>}
+            <div className={`small ${kStatus.state === 'error' ? '' : 'muted'}`} style={kStatus.state === 'error' ? { color: 'var(--almost)' } : kStatus.state === 'ready' ? { color: 'var(--got)' } : undefined}>{kStatus.message}</div>
           </div>
         )}
       </div>

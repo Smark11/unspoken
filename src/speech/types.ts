@@ -5,8 +5,8 @@ export type Rate = 'normal' | 'slow'
 
 export interface Speaker {
   readonly available: boolean
-  /** 'cloud' when a voice server is configured, else the device's own voices. */
-  readonly engine: 'device' | 'cloud'
+  /** Which engine will speak next: the device's own voices, a voice server, or Kokoro in the browser. */
+  readonly engine: 'device' | 'cloud' | 'kokoro'
   speak(text: string, rate: Rate): void
   stop(): void
   /** Subscribe to speaking on/off; returns an unsubscribe function. */
