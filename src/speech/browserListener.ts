@@ -22,12 +22,12 @@ function ctor(): RecognitionCtor | undefined {
 }
 
 export function createBrowserListener(): Listener {
-  const Ctor = ctor()
   let current: Recognition | null = null
 
   return {
-    available: !!Ctor,
+    get available() { return !!ctor() },
     listen({ lang, timeoutMs }): Promise<ListenResult> {
+      const Ctor = ctor()
       if (!Ctor) return Promise.resolve({ ok: false, error: 'unsupported' })
       return new Promise((resolve) => {
         const rec = new Ctor()

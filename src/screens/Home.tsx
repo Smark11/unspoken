@@ -1,23 +1,24 @@
 import { load, titleFor, type WordList } from '../lib/storage'
-import { pickReview } from '../lib/scheduler'
+import { isRetired, pickReview } from '../lib/scheduler'
 import { navigate } from '../lib/router'
 import { listener, speaker } from '../speech'
+import { ChevronIcon, MicIcon, PlusIcon, Ring } from '../components/Icons'
 
 export function Home() {
   const store = load()
-  const due = pickReview(store.progress, Date.now())
+  const now = Date.now()
+  const due = pickReview(store.progress, now)
   const lists = [...store.lists].sort(
     (a, b) => (b.lastPracticedAt ?? b.createdAt) - (a.lastPracticedAt ?? a.createdAt),
   )
+  const progress = Object.values(store.progress)
+  const mastered = progress.filter((p) => p.box > 0).length
+  const retired = progress.filter(isRetired).length
 
   return (
     <div className="screen">
-      <div className="home-head">
-        <div>
-          <h1 className="title">Unspoken</h1>
-          <p className="tagline">Words you know. Learn to say them.</p>
-        </div>
-      </div>
+      <div className="brand"><span className="brand-mark"><MicIcon size={16} /></span>Unspoken</div>
+      <h1 className="hero-title">Words you know.<br /><em>Learn to say them.</em></h1>
 
       {(!listener.available || !speaker.available) && (
         <div className="notice">
@@ -27,52 +28,63 @@ export function Home() {
         </div>
       )}
 
-      {due.length > 0 && (
-        <button type="button" className="review-card" onClick={() => navigate({ name: 'review' })}>
-          <span>
-            <strong>Quick review</strong>
-            <span className="muted small">
-              {due.length === 1 ? '1 word you mastered is due' : `${due.length} words you mastered are due`}
-            </span>
-          </span>
-          <span className="count">{due.length}</span>
-        </button>
+      {due.length > 0 ? (
+        <section className="hero-card">
+          <div className="kicker">Quick review</div>
+          <div className="big">{due.length === 1 ? 'One word is due' : `${due.length} words are due`}</div>
+          <button type="button" className="btn" onClick={() => navigate({ name: 'review' })}>Review now</button>
+        </section>
+      ) : (
+        <section className="hero-card">
+          <div className="kicker">{lists.length ? 'Nothing to review yet' : 'Start here'}</div>
+          <div className="big">{lists.length ? 'Add the words you keep avoiding' : 'Add the words you avoid saying out loud'}</div>
+          <button type="button" className="btn" onClick={() => navigate({ name: 'new' })}><PlusIcon size={18} />New list</button>
+        </section>
       )}
 
-      <div style={{ marginTop: 24 }}>
-        <button type="button" className="btn primary block" onClick={() => navigate({ name: 'new' })}>
-          New list
-        </button>
+      <div className="stats">
+        <div className="stat"><b>{mastered}</b><span>mastered</span></div>
+        <div className="stat"><b>{retired}</b><span>locked in</span></div>
+        <div className="stat"><b>{due.length}</b><span>due now</span></div>
       </div>
 
       {lists.length === 0 ? (
         <div className="empty">
-          <div>Start with the words you avoid saying out loud.</div>
+          <div className="small">Try something like</div>
           <div className="ex">pleocytosis<br />Worcestershire<br />gnocchi</div>
           <div className="small">Up to ten at a time. You’ll hear each one, say it, and move on when it lands.</div>
         </div>
       ) : (
         <>
-          <div className="section-label">Your lists</div>
-          {lists.map((l) => (
-            <ListRow key={l.id} list={l} />
-          ))}
+          <div className="section-head">
+            <h2>Your lists</h2>
+            {due.length > 0 && (
+              <button type="button" className="btn quiet" style={{ minHeight: 32, padding: 0 }} onClick={() => navigate({ name: 'new' })}>
+                <PlusIcon size={16} />New list
+              </button>
+            )}
+          </div>
+          {lists.map((l) => <ListCard key={l.id} list={l} />)}
         </>
       )}
     </div>
   )
 }
 
-function ListRow({ list }: { list: WordList }) {
+function ListCard({ list }: { list: WordList }) {
   const got = list.words.filter((w) => list.results[w] === 'got').length
   const all = got === list.words.length
   return (
-    <button type="button" className="list-row" onClick={() => navigate({ name: 'practice', listId: list.id })}>
-      <span style={{ minWidth: 0 }}>
-        <span className="name" style={{ display: 'block' }}>{list.title || titleFor(list.words)}</span>
-        <span className="sub">{list.words.length === 1 ? '1 word' : `${list.words.length} words`}{all ? ' · mastered' : ''}</span>
+    <button type="button" className={`list-card${all ? ' done' : ''}`} onClick={() => navigate({ name: 'practice', listId: list.id })}>
+      <span className="ring">
+        <Ring value={got / list.words.length} size={46} stroke={4} />
+        <span className="pct">{got}/{list.words.length}</span>
       </span>
-      <span className={`count${all ? ' done' : ''}`}>{got}/{list.words.length}</span>
+      <span className="body">
+        <span className="name">{list.title || titleFor(list.words)}</span>
+        <span className="sub">{list.words.length === 1 ? '1 word' : `${list.words.length} words`}{all ? ' · all mastered' : got ? ` · ${got} mastered` : ' · not started'}</span>
+      </span>
+      <ChevronIcon className="chev" />
     </button>
   )
 }

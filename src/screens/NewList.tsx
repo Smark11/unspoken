@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { MAX_WORDS, parseWords } from '../lib/words'
 import { newId, titleFor, update } from '../lib/storage'
 import { navigate } from '../lib/router'
+import { BackIcon } from '../components/Icons'
 
 export function NewList() {
   const [text, setText] = useState('')
@@ -26,27 +27,32 @@ export function NewList() {
 
   return (
     <div className="screen">
-      <div>
-        <button type="button" className="btn quiet" style={{ marginLeft: -20 }} onClick={() => navigate({ name: 'home' })}>
-          ‹ Back
-        </button>
+      <div className="topbar">
+        <button type="button" className="icon-btn" aria-label="Back" onClick={() => navigate({ name: 'home' })}><BackIcon /></button>
       </div>
-      <h1 className="title" style={{ marginTop: 8 }}>New list</h1>
-      <p className="tagline">Type or paste up to ten words. One per line, or separated by commas.</p>
-      <textarea
-        className="textarea"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={'pleocytosis\nWorcestershire\nquinoa'}
-        autoCapitalize="off"
-        autoCorrect="off"
-        spellCheck={false}
-        autoFocus
-      />
+      <h1 className="title" style={{ marginTop: 18 }}>New list</h1>
+      <p className="tagline">Up to ten words you want to say with confidence. One per line, or separated by commas.</p>
+      <div className="card">
+        <textarea
+          className="textarea"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={'pleocytosis\nWorcestershire\nquinoa'}
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          autoFocus
+        />
+      </div>
       <div className="counter">
         <span>{words.length} of {MAX_WORDS}</span>
         {over && <span className="over">Only the first {MAX_WORDS} will be used</span>}
       </div>
+      {words.length > 0 && (
+        <div className="preview" aria-hidden="true">
+          {words.map((w, i) => <span key={w} className={`tag${i >= MAX_WORDS ? ' extra' : ''}`}>{w}</span>)}
+        </div>
+      )}
       <div className="sticky-bottom">
         <button type="button" className="btn primary block" disabled={!words.length} onClick={start}>
           Start practising
