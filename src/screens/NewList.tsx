@@ -118,8 +118,8 @@ export function NewList() {
             return (
               <li key={s} role="option" aria-selected={false}>
                 <button type="button" onClick={() => add(s)} disabled={has(s)}>
-                  {i >= 0 ? (<>{s.slice(0, i)}<b>{s.slice(i, i + p.length)}</b>{s.slice(i + p.length)}</>) : s}
-                  {has(s) && <span className="small muted">added</span>}
+                  <span className="w">{i >= 0 ? (<>{s.slice(0, i)}<b>{s.slice(i, i + p.length)}</b>{s.slice(i + p.length)}</>) : s}</span>
+                  {has(s) ? <span className="small muted">added</span> : <PlusIcon size={16} className="plus" />}
                 </button>
               </li>
             )
