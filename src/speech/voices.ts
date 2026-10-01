@@ -45,8 +45,9 @@ export function resolvePreset(p: Preset, voices: VoiceInfo[]): VoiceInfo | undef
   let picks = pool
   if (p.gender === 'f') picks = pool.filter((v) => FEMALE.test(v.name))
   if (p.gender === 'm') picks = pool.filter((v) => MALE.test(v.name))
-  // Voice names we can't read (Android's are codes) still count when nothing else fits.
-  if (!picks.length) picks = pool.filter((v) => !known(v))
+  // Voice names we can't read (Android's are codes) count only when the device names none of them;
+  // otherwise a "deep" preset could quietly land on a woman's voice, or the reverse.
+  if (!picks.length && !pool.some(known)) picks = pool
   if (!picks.length) return undefined
   return [...picks].sort((a, b) => quality(a) - quality(b))[0]
 }

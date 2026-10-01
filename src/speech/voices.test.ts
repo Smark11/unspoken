@@ -30,6 +30,9 @@ describe('voice presets', () => {
   })
   it('hides presets the device cannot honour', () => {
     expect(resolvePreset(by('za'), mac)).toBeUndefined()
+    // A named-but-wrong-gender pool must not fall back to an unnamed voice.
+    const mixed = [{ name: 'Samantha', lang: 'en-US', local: true }, { name: 'Google US English', lang: 'en-US', local: false }]
+    expect(resolvePreset(by('us-m'), mixed)).toBeUndefined()
     expect(availablePresets(mac).map((x) => x.preset.id)).not.toContain('za')
   })
 })
